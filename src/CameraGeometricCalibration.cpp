@@ -2,7 +2,7 @@
  * CameraGeometricCalibration.cpp
  *
  *  Created on: 12 nov. 2013
- *      Author: Jetze
+ *      Author: Jetze en Barend
  */
 
 #include <opencv2/core/core.hpp>
