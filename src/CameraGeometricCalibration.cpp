@@ -1,43 +1,43 @@
-/*
- * CameraGeometricCalibration.cpp
- *
- *  Created on: 12 nov. 2013
- *      Author: Jetze en Barend
- *      Test
- */
+// Draws a white square in the center of a picture.
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
+
 #include <iostream>
+#include <math.h>
+
+
 using namespace cv;
 using namespace std;
 
-// Displays a supplied image
-int main(int argc, const char** argv) {
-
-	VideoCapture camera;
-	Mat webcamImage;
-	camera.open(0);
-	if (!camera.isOpened()) {
-		cerr << "ERROR: Could not access the camera or video!" << endl;
-		exit(1);
-	}
-
-	namedWindow("test", CV_WINDOW_AUTOSIZE);
-	while (true) {
-		camera >> webcamImage;
-		if (webcamImage.empty()) {
-			cerr << "ERROR: Couldn't grab a camera frame." << endl;
-			exit(1);
-		}
-		//rotate it on the x axis
-		flip(webcamImage, webcamImage, 1);
-		imshow("test", webcamImage);
-		if (27 == waitKey(33))
-			break;
-	}
-	return 0;
+int main()
+{
+    // Name path for image here
+    String path = "/Users/barendpoot/workspace/opencvtest/opencvtest/pic6.png";
+    
+    Mat image;
+    image = imread(path, CV_LOAD_IMAGE_COLOR);   // Read the file
+    
+    if(! image.data )                              // Check for invalid input
+    {
+        cout <<  "Could not open or find the image" << endl ;
+        return -1;
+    }
+    
+    // Get Height and Width from image
+    Size s = image.size();
+    int imgHeight = s.height;
+    int imgWidth = s.width;
+    
+    //Draw filled rectangle in center of image
+    rectangle(image,cvPoint((imgWidth/2-50),imgHeight/2-50), cvPoint((imgWidth/2+50), imgHeight/2+50),CV_RGB(255,255,255),1,8);
+    
+    namedWindow( "Display window", CV_WINDOW_AUTOSIZE );// Create a window for display.
+    imshow( "Display window", image );                   // Show our image inside it.
+    
+    waitKey(0);                                          // Wait for a keystroke in the window
+    return 0;
+    
 }
 
