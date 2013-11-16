@@ -10,8 +10,14 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
+#include <stdlib.h>
+
 using namespace cv;
 using namespace std;
+
+bool takeSamples(Mat webcamImage,Size boardSize, vector<Point2f>& imagePoints, Vector<Point2f>& pointBuf);
+
+
 
 // Displays a supplied image
 int main(int argc, const char** argv) {
@@ -59,6 +65,7 @@ int main(int argc, const char** argv) {
             imagePoints.push_back(pointBuf);
             imgCounter++;
             cout << pointBuf << endl;
+          
 
         }
         
@@ -69,3 +76,11 @@ int main(int argc, const char** argv) {
 	return 0;
 }
 
+//bool takeSamples(Mat webcamImage,Size boardSize, vector<Point2f>& imagePoints, Vector<Point2f>& pointBuf)
+//{
+    
+//    findChessboardCorners(webcamImage, boardSize, pointBuf);
+//    imagePoints.push_back(pointBuf);
+//    usleep(1);
+    
+//}
