@@ -11,6 +11,7 @@
 using namespace cv;
 using namespace std;
 
+<<<<<<< HEAD
 static void help()
 {
     cout <<  "This is a camera calibration sample." << endl
@@ -535,6 +536,33 @@ static void saveCameraParams( Settings& s, Size& imageSize, Mat& cameraMatrix, M
         }
         fs << "Image_points" << imagePtMat;
     }
+=======
+// Displays a supplied image
+int main(int argc, const char** argv) {
+
+	VideoCapture camera;
+	Mat webcamImage;
+	camera.open(0);
+	if (!camera.isOpened()) {
+		cerr << "ERROR: Could not access the camera or video!" << endl;
+		exit(1);
+	}
+
+	namedWindow("test", CV_WINDOW_AUTOSIZE);
+	while (true) {
+		camera >> webcamImage;
+		if (webcamImage.empty()) {
+			cerr << "ERROR: Couldn't grab a camera frame." << endl;
+			exit(1);
+		}
+		//rotate it on the x axis
+		flip(webcamImage, webcamImage, 1);
+		imshow("test", webcamImage);
+		if (27 == waitKey(33))
+			break;
+	}
+	return 0;
+>>>>>>> parent of 98a5ab1... Added "findChessboardCorners"
 }
 
 bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs,vector<vector<Point2f> > imagePoints )
