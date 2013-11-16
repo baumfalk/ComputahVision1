@@ -5,17 +5,9 @@
  *      Author: Jetze en Barend
  */
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <iostream>
-using namespace cv;
-using namespace std;
+#include "CameraGeometricCalibration.h"
 
-// Displays a supplied image
-int main(int argc, const char** argv) {
-
+void CameraGeometricCalibration::showShit() {
 	VideoCapture camera;
 	Mat webcamImage;
 	camera.open(0);
@@ -31,32 +23,48 @@ int main(int argc, const char** argv) {
 			cerr << "ERROR: Couldn't grab a camera frame." << endl;
 			exit(1);
 		}
-        
-        // Vector
-        vector<Point2f> pointBuf;
 
-        // set boardSize
-        Size boardSize;
-        boardSize.width = 9;
-        boardSize.height = 6;
-        
+		// Vector
+		vector<Point2f> pointBuf;
+
+		// set boardSize
+		Size boardSize;
+		boardSize.width = 9;
+		boardSize.height = 6;
+
 		//rotate it on the x axis
 		flip(webcamImage, webcamImage, 1);
 		imshow("test", webcamImage);
-        
-        // Find a chessboard pattern on webcamfeed with size boardSize.
-        bool found;
-        found = findChessboardCorners( webcamImage, boardSize, pointBuf,
-                                      CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
-        
-        if (found)
-        {
-            cout << "found" << endl;
-        }
-        
+
+		// Find a chessboard pattern on webcamfeed with size boardSize.
+		bool found;
+		found = findChessboardCorners(webcamImage, boardSize, pointBuf,
+				CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK
+						| CV_CALIB_CB_NORMALIZE_IMAGE);
+
+		if (found) {
+			cout << "found" << endl;
+		}
+
 		if (27 == waitKey(33))
 			break;
 	}
-	return 0;
+}
+
+void CameraGeometricCalibration::openWebcam()
+{
+
+}
+void CameraGeometricCalibration::takeSamples()
+{
+
+}
+void CameraGeometricCalibration::calibrateCamera()
+{
+
+}
+void CameraGeometricCalibration::drawAxesAndCube()
+{
+
 }
 
