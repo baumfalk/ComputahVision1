@@ -26,6 +26,10 @@ private:
 	void calcChessBoardPositions3D(Size boardSize, float squareSize,
 			vector<Point3f>& corners);
 	void calculateReprojectionErrors();
+
+	void createAxes(vector<Point3f>& axes,int length);
+	void createCube(vector<Point3f>& axes, int length);
+
 	VideoCapture camera;
 	Mat webcamImage;
 	Mat cameraMatrix;

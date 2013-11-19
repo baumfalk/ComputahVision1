@@ -17,7 +17,7 @@ CameraGeometricCalibration::CameraGeometricCalibration(
 	numberOfSamplesFound = 0;
 	boardSize.width = 9; // TODO: make this dynamic.
 	boardSize.height = 6;
-	squareSize = 3;
+	squareSize = 13;
 	timestamp = clock();
 	namedWindow(windowName, CV_WINDOW_AUTOSIZE);
 
@@ -43,7 +43,7 @@ void CameraGeometricCalibration::takeSamples() {
 				numberOfSamplesNeeded);
 		writeText(10, 20, msg);
 
-		if (enoughTimeElapsed(750)) {
+		if (enoughTimeElapsed(500)) {
 			chessBoardFound = findChessBoard();
 			if (chessBoardFound) {
 				numberOfSamplesFound++;
@@ -105,10 +105,52 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 			for(int i =0; i < imagePoints.size()-1; i++){
 				line(webcamImage,imagePoints[i],imagePoints[i+1],Scalar(128,0,128));
 			}
+			vector<Point3f> axes;
+			createAxes(axes,15);
+
+			projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
+			line(webcamImage,imagePoints[0],imagePoints[1],Scalar(0,256,128),1);
+			line(webcamImage,imagePoints[0],imagePoints[2],Scalar(0,256,128),1);
+			line(webcamImage,imagePoints[0],imagePoints[3],Scalar(0,256,128),1);
+
+			createCube(axes,10);
+			projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
+			for(int i = 0; i <  imagePoints.size(); i++) {
+				for( int j = 0; j < imagePoints.size(); j++) {
+					if(i==j)
+						continue;
+					line(webcamImage,imagePoints[i],imagePoints[j],Scalar(128,128,128),1);
+				}
+			}
 
 		}
 		showPicture(false);
 	}
+}
+
+void CameraGeometricCalibration::createAxes(vector<Point3f>& axes, int length){
+	axes.clear();
+	axes.push_back(Point3f(0, 0, 0));
+	axes.push_back(Point3f(length, 0, 0));
+	axes.push_back(Point3f(0, length, 0));
+	axes.push_back(Point3f(0, 0, length));
+
+
+}
+
+void CameraGeometricCalibration::createCube(vector<Point3f>& axes, int length){
+	axes.clear();
+	axes.push_back(Point3f(0, 0, 0));
+
+	axes.push_back(Point3f(length, 0, 0));
+	axes.push_back(Point3f(0, length, 0));
+	axes.push_back(Point3f(0, 0, length));
+
+	axes.push_back(Point3f(length, length, 0));
+	axes.push_back(Point3f(0, length, length));
+	axes.push_back(Point3f(length, 0, length));
+
+	axes.push_back(Point3f(length, length, length));
 }
 
 void CameraGeometricCalibration::calculateReprojectionErrors() {
