@@ -11,7 +11,7 @@ using namespace std;
 class CameraGeometricCalibration {
 //TODO: restructure
 public:
-	CameraGeometricCalibration(short numberOfSamplesNeeded = 25,
+	CameraGeometricCalibration(short numberOfSamplesNeeded = 60,
 			string windowName = "ComputahVision1");
 	void takeSamples();
 	void calibrate();
