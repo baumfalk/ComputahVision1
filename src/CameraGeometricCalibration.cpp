@@ -37,20 +37,17 @@ CameraGeometricCalibration::CameraGeometricCalibration(
  */
 void CameraGeometricCalibration::takeSamples() {
 
-	while (numberOfSamplesFound != numberOfSamplesNeeded && 27 != waitKey(33)) {
+	while (numberOfSamplesFound != numberOfSamplesNeeded && waitKey(33)) {
 		takePicture();
 		string msg = format("%d/%d", numberOfSamplesFound,
 				numberOfSamplesNeeded);
 		writeText(10, 20, msg);
 
-		if (enoughTimeElapsed(15)) {
+		if (enoughTimeElapsed(750)) {
 			chessBoardFound = findChessBoard();
 			if (chessBoardFound) {
 				numberOfSamplesFound++;
-				/*Mat viewGray;
-				 cvtColor(webcamImage, viewGray, CV_BGR2GRAY);
-				 cornerSubPix( viewGray, pointBuf, Size(11,11),
-				 Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));*/
+
 			}
 			timestamp = clock();
 		}
@@ -74,8 +71,60 @@ void CameraGeometricCalibration::calibrate() {
 			boardSize, cameraMatrix, distCoeffs, rvecs, tvecs,
 			CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5);
 
-	cout << cameraMatrix << endl;
-	cout << rms << endl;
+	cout << "Camera matrix: " << cameraMatrix << endl;
+	cout << "error: " << rms << endl;
+	calculateReprojectionErrors();
+}
+
+// TODO: write comments
+void CameraGeometricCalibration::drawAxesAndCube() {
+	//TODO: implement me
+	while (27 != waitKey(33)) {
+		takePicture();
+
+		Mat img;
+		undistort(webcamImage,img,cameraMatrix,distCoeffs);
+		webcamImage = img;
+		chessBoardFound = findChessBoard(false);
+		if (chessBoardFound) {
+			Mat rvec;
+			Mat rmat;
+			Mat tvec;
+			Mat extrinsic;
+
+			solvePnP(chessBoardPoints3D[0], pointBuf, cameraMatrix, distCoeffs,
+					rvec, tvec, false, CV_EPNP);
+			Rodrigues(rvec, rmat);
+			hconcat(rmat, tvec, extrinsic);
+
+			vector<Point2f> imagePoints;
+
+			projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec,
+							cameraMatrix, distCoeffs, imagePoints);
+
+			for(int i =0; i < imagePoints.size()-1; i++){
+				line(webcamImage,imagePoints[i],imagePoints[i+1],Scalar(128,0,128));
+			}
+
+		}
+		showPicture(false);
+	}
+}
+
+void CameraGeometricCalibration::calculateReprojectionErrors() {
+	vector<Point2f> imagePoints2;
+	int i, totalPoints = 0;
+	double totalErr = 0, err;
+	for (int i = 0; i < chessBoardPointList.size(); i++) {
+		projectPoints(Mat(chessBoardPoints3D[i]), rvecs[i], tvecs[i],
+				cameraMatrix, distCoeffs, imagePoints2);
+		err = norm(Mat(chessBoardPointList[i]), Mat(imagePoints2), CV_L2);
+		int n = (int) chessBoardPointList[i].size();
+		totalErr += err * err;
+		totalPoints += n;
+	}
+
+	cout << "reprojection error:" << std::sqrt(totalErr/totalPoints) << endl;
 }
 
 //TODO: write comments
@@ -91,44 +140,6 @@ void CameraGeometricCalibration::calcChessBoardPositions3D(Size boardSize,
 /*
  * Draw the axes of the chessboard on the origin as well as a cube.
  */
-void CameraGeometricCalibration::drawAxesAndCube() {
-	//TODO: implement me
-	while (27 != waitKey(33)) {
-		takePicture();
-
-		chessBoardFound = findChessBoard();
-		if (chessBoardFound) {
-			Mat rvec;
-			Mat rmat;
-			Mat tvec;
-			Mat extrinsic;
-			//bool solvePnP(InputArray objectPoints, InputArray imagePoints, InputArray cameraMatrix, InputArray distCoeffs, OutputArray rvec, OutputArray tvec, bool useExtrinsicGuess=false, int flags=ITERATIVE )
-			solvePnP(chessBoardPoints3D[0], pointBuf, cameraMatrix, distCoeffs,
-					rvec, tvec);
-			vector<Point3f> z(1);
-			z[0] = Point3f(0, 0, 100);
-			Mat zHomoG;
-
-			convertPointsToHomogeneous(z, zHomoG);
-			Rodrigues(rvec, rmat);
-			hconcat(rmat, tvec, extrinsic);
-			cout << "rmat " << rmat << " " <<  rmat.type() << endl;
-			cout << "tvec " << tvec << endl;
-			cout << "extrinsic " << extrinsic << " " << extrinsic.type()
-					<< endl;
-			cout << "zhomoG " << zHomoG << " " << zHomoG.type() << endl;
-
-			Mat output = extrinsic * zHomoG;
-
-			//Mat pt;
-			//multiply(cameraMatrix,output,pt);
-			//cout << pt << endl;
-			//writeText(pt.data[0],pt.data[1],"TITS");
-		}
-		showPicture();
-	}
-}
-
 /*
  * used to take a picture from the webcam. We rotate it around the x-axis so
  * that the window functions like a mirror. This the calibration easier,
@@ -151,9 +162,9 @@ void CameraGeometricCalibration::takePicture() {
  * used to draw the picture taken from the webcam on the screen.
  * If a chessboard was found in the picture, we show it in the picture.
  */
-void CameraGeometricCalibration::showPicture() {
+void CameraGeometricCalibration::showPicture(bool drawChessBoard) {
 
-	if (chessBoardFound) {
+	if (chessBoardFound && drawChessBoard) {
 		drawChessboardCorners(webcamImage, boardSize, pointBuf, true);
 	}
 	imshow(windowName, webcamImage);
@@ -167,12 +178,18 @@ void CameraGeometricCalibration::writeText(int x, int y, string msg) {
 }
 
 // used to find the chessboard in a picture and store the corners in a list.
-bool CameraGeometricCalibration::findChessBoard() {
+bool CameraGeometricCalibration::findChessBoard(bool add) {
 	bool result = findChessboardCorners(webcamImage, boardSize, pointBuf,
 			CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK
 					| CV_CALIB_CB_NORMALIZE_IMAGE);
 
-	if (result) {
+	if (result && add) {
+		//ENHANCE
+		Mat viewGray;
+		cvtColor(webcamImage, viewGray, CV_BGR2GRAY);
+		cornerSubPix( viewGray, pointBuf, Size(11,11),
+		Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
+
 		chessBoardPointList.push_back(pointBuf);
 	}
 	return result;

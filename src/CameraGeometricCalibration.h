@@ -19,12 +19,13 @@ public:
 
 private:
 	void takePicture();
-	void showPicture();
+	void showPicture(bool drawChessBoard = true);
 	void writeText(int x, int y, string msg);
-	bool findChessBoard();
+	bool findChessBoard(bool add = true);
 	bool enoughTimeElapsed(double waitingTime);
 	void calcChessBoardPositions3D(Size boardSize, float squareSize,
 			vector<Point3f>& corners);
+	void calculateReprojectionErrors();
 	VideoCapture camera;
 	Mat webcamImage;
 	Mat cameraMatrix;
