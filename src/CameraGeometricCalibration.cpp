@@ -78,7 +78,7 @@ void CameraGeometricCalibration::calibrate() {
 
 // TODO: write comments
 void CameraGeometricCalibration::drawAxesAndCube() {
-	//TODO: implement me
+    alpha = 0;
 	while (27 != waitKey(33)) {
 		takePicture();
 
@@ -91,6 +91,13 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 			Mat rmat;
 			Mat tvec;
 			Mat extrinsic;
+            Mat rotatedAxes;
+                    
+            // Rotation matrix around the Z axis
+            Mat RZ = (Mat_<double>(3, 3) <<
+                      cos(alpha), -sin(alpha), 0,
+                      sin(alpha),  cos(alpha), 0,
+                      0,          0,           1);
 
 			solvePnP(chessBoardPoints3D[0], pointBuf, cameraMatrix, distCoeffs,
 					rvec, tvec, false, CV_EPNP);
@@ -101,6 +108,7 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 
 			projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec,
 							cameraMatrix, distCoeffs, imagePoints);
+            cout << "tvec: " << tvec << endl;
 
 			for(int i =0; i < imagePoints.size()-1; i++){
 				line(webcamImage,imagePoints[i],imagePoints[i+1],Scalar(128,0,128));
@@ -113,9 +121,14 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 			line(webcamImage,imagePoints[0],imagePoints[2],Scalar(0,255,221),2);
 			line(webcamImage,imagePoints[0],imagePoints[3],Scalar(0,51,255),2);
 
-			
-            createCube(axes,10);
-			projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
+			//createCube(axes, 10);
+            //projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
+            
+            // Use projectPoints with RZ for a rotating cube.
+            createRotatingCube(axes,10);
+			projectPoints(Mat(axes), RZ, tvec, cameraMatrix, distCoeffs, imagePoints);
+            alpha = alpha + 1*(180/M_PI);
+            
             line(webcamImage,imagePoints[0],imagePoints[1],Scalar(255,0,0),2);
             line(webcamImage,imagePoints[0],imagePoints[2],Scalar(255,0,0),2);
             line(webcamImage,imagePoints[0],imagePoints[3],Scalar(255,0,0),2);
@@ -128,19 +141,6 @@ void CameraGeometricCalibration::drawAxesAndCube() {
             line(webcamImage,imagePoints[7],imagePoints[5],Scalar(255,0,0),2);
             line(webcamImage,imagePoints[7],imagePoints[6],Scalar(255,0,0),2);
             line(webcamImage,imagePoints[7],imagePoints[4],Scalar(255,0,0),2);
-         
-
-            
-            /*
-			for(int i = 0; i <  imagePoints.size(); i++) {
-				for( int j = 0; j < imagePoints.size(); j++) {
-					if(i==j)
-						continue;
-					line(webcamImage,imagePoints[i],imagePoints[j],Scalar(255,255,255),2);
-				}
-			}
-            */
-            
 
 		}
 		showPicture(false);
@@ -172,9 +172,26 @@ void CameraGeometricCalibration::createCube(vector<Point3f>& axes, int length){
 	axes.push_back(Point3f(length, length, -length));
 }
 
+void CameraGeometricCalibration::createRotatingCube(vector<Point3f>& axes, int length){
+	axes.clear();
+	axes.push_back(Point3f(-5, -5, 0));
+    
+	axes.push_back(Point3f(length, -5, 0));
+	axes.push_back(Point3f(-5, length, 0));
+	axes.push_back(Point3f(-5, -5, -length));
+    
+	axes.push_back(Point3f(length, length, 0));
+	axes.push_back(Point3f(-5, length, -length));
+	axes.push_back(Point3f(length, -5, -length));
+    
+	axes.push_back(Point3f(length, length, -length));
+}
+
+
+
 void CameraGeometricCalibration::calculateReprojectionErrors() {
 	vector<Point2f> imagePoints2;
-	int i, totalPoints = 0;
+	int totalPoints = 0;
 	double totalErr = 0, err;
 	for (int i = 0; i < chessBoardPointList.size(); i++) {
 		projectPoints(Mat(chessBoardPoints3D[i]), rvecs[i], tvecs[i],

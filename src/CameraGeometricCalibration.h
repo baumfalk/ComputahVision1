@@ -11,7 +11,7 @@ using namespace std;
 class CameraGeometricCalibration {
 //TODO: restructure
 public:
-	CameraGeometricCalibration(short numberOfSamplesNeeded = 60,
+	CameraGeometricCalibration(short numberOfSamplesNeeded = 40,
 			string windowName = "ComputahVision1");
 	void takeSamples();
 	void calibrate();
@@ -29,6 +29,8 @@ private:
 
 	void createAxes(vector<Point3f>& axes,int length);
 	void createCube(vector<Point3f>& axes, int length);
+    void createRotatingCube(vector<Point3f>& axes, int length);
+
 
 	VideoCapture camera;
 	Mat webcamImage;
@@ -42,6 +44,7 @@ private:
 	Size boardSize;
 	float squareSize;
 	bool chessBoardFound;
+    int alpha;
 
 	vector<Mat> rvecs;
 	vector<Mat> tvecs;
