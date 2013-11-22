@@ -2,7 +2,9 @@
  * CameraGeometricCalibration.cpp
  *
  *  Created on: 12 nov. 2013
- *      Author: Jetze en Barend
+ *      Author: Jetze (3471055)
+ *          en  Barend (3539784)
+ *
  */
 
 #include "CameraGeometricCalibration.h"
@@ -61,7 +63,6 @@ void CameraGeometricCalibration::takeSamples() {
  * i.e. find the intrinsic and extrinsic parameters.
  */
 void CameraGeometricCalibration::calibrate() {
-	//TODO: implement me
 	vector<Point3f> tmp;
 	chessBoardPoints3D.resize(1, tmp);
 	calcChessBoardPositions3D(boardSize, squareSize, chessBoardPoints3D[0]);
@@ -76,9 +77,12 @@ void CameraGeometricCalibration::calibrate() {
 	calculateReprojectionErrors();
 }
 
-// TODO: write comments
+/*
+ * Undistort the image.
+ * Calculate the rotation and translation vector.
+ * Use that data to draw the 3 axes and a cube.
+ */
 void CameraGeometricCalibration::drawAxesAndCube() {
-    alpha = 0;
 	while (27 != waitKey(33)) {
 		takePicture();
 
@@ -93,12 +97,7 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 			Mat extrinsic;
             Mat rotatedAxes;
                     
-            // Rotation matrix around the Z axis
-            Mat RZ = (Mat_<double>(3, 3) <<
-                      cos(alpha), -sin(alpha), 0,
-                      sin(alpha),  cos(alpha), 0,
-                      0,          0,           1);
-
+            
 			solvePnP(chessBoardPoints3D[0], pointBuf, cameraMatrix, distCoeffs,
 					rvec, tvec, false, CV_EPNP);
 			Rodrigues(rvec, rmat);
@@ -108,7 +107,6 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 
 			projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec,
 							cameraMatrix, distCoeffs, imagePoints);
-            cout << "tvec: " << tvec << endl;
 
 			for(int i =0; i < imagePoints.size()-1; i++){
 				line(webcamImage,imagePoints[i],imagePoints[i+1],Scalar(128,0,128));
@@ -121,14 +119,8 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 			line(webcamImage,imagePoints[0],imagePoints[2],Scalar(0,255,221),2);
 			line(webcamImage,imagePoints[0],imagePoints[3],Scalar(0,51,255),2);
 
-			//createCube(axes, 10);
-            //projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
-            
-            // Use projectPoints with RZ for a rotating cube.
-            createRotatingCube(axes,10);
-			projectPoints(Mat(axes), RZ, tvec, cameraMatrix, distCoeffs, imagePoints);
-            alpha = alpha + 1*(180/M_PI);
-            
+			createCube(axes, 10);
+            projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
             line(webcamImage,imagePoints[0],imagePoints[1],Scalar(255,0,0),2);
             line(webcamImage,imagePoints[0],imagePoints[2],Scalar(255,0,0),2);
             line(webcamImage,imagePoints[0],imagePoints[3],Scalar(255,0,0),2);
@@ -147,6 +139,10 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 	}
 }
 
+/*
+ * Initialize the coordinates needed to draw the X, Y and Z axes.
+ *
+ */
 void CameraGeometricCalibration::createAxes(vector<Point3f>& axes, int length){
 	axes.clear();
 	axes.push_back(Point3f(0, 0, 0));
@@ -157,6 +153,10 @@ void CameraGeometricCalibration::createAxes(vector<Point3f>& axes, int length){
 
 }
 
+/*
+ * Initialize the coordinates needed to draw a cube along the axes.
+ *
+ */
 void CameraGeometricCalibration::createCube(vector<Point3f>& axes, int length){
 	axes.clear();
 	axes.push_back(Point3f(0, 0, 0));
@@ -172,23 +172,10 @@ void CameraGeometricCalibration::createCube(vector<Point3f>& axes, int length){
 	axes.push_back(Point3f(length, length, -length));
 }
 
-void CameraGeometricCalibration::createRotatingCube(vector<Point3f>& axes, int length){
-	axes.clear();
-	axes.push_back(Point3f(-5, -5, 0));
-    
-	axes.push_back(Point3f(length, -5, 0));
-	axes.push_back(Point3f(-5, length, 0));
-	axes.push_back(Point3f(-5, -5, -length));
-    
-	axes.push_back(Point3f(length, length, 0));
-	axes.push_back(Point3f(-5, length, -length));
-	axes.push_back(Point3f(length, -5, -length));
-    
-	axes.push_back(Point3f(length, length, -length));
-}
-
-
-
+/*
+ * Calculate and print the reprojection error.
+ *
+ */
 void CameraGeometricCalibration::calculateReprojectionErrors() {
 	vector<Point2f> imagePoints2;
 	int totalPoints = 0;
@@ -220,7 +207,7 @@ void CameraGeometricCalibration::calcChessBoardPositions3D(Size boardSize,
  */
 /*
  * used to take a picture from the webcam. We rotate it around the x-axis so
- * that the window functions like a mirror. This the calibration easier,
+ * that the window functions like a mirror. This makes the calibration easier,
  * since we are used to seeing ourself in a mirror and expect the window to also
  * behave in this way.
  */
@@ -237,7 +224,7 @@ void CameraGeometricCalibration::takePicture() {
 }
 
 /*
- * used to draw the picture taken from the webcam on the screen.
+ * Draw the picture taken from the webcam on the screen.
  * If a chessboard was found in the picture, we show it in the picture.
  */
 void CameraGeometricCalibration::showPicture(bool drawChessBoard) {
@@ -249,20 +236,23 @@ void CameraGeometricCalibration::showPicture(bool drawChessBoard) {
 }
 
 /*
- * used to draw a message on the window.
+ * Draw a message on the window.
  */
 void CameraGeometricCalibration::writeText(int x, int y, string msg) {
 	putText(webcamImage, msg, Point(x, y), 1, 1, Scalar(0, 0, 255));
 }
 
-// used to find the chessboard in a picture and store the corners in a list.
+/*
+ * Find the chessboard in a picture and store the corners in a list.
+ *
+ */
 bool CameraGeometricCalibration::findChessBoard(bool add) {
 	bool result = findChessboardCorners(webcamImage, boardSize, pointBuf,
 			CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK
 					| CV_CALIB_CB_NORMALIZE_IMAGE);
 
 	if (result && add) {
-		//ENHANCE
+		//Enhance the corners
 		Mat viewGray;
 		cvtColor(webcamImage, viewGray, CV_BGR2GRAY);
 		cornerSubPix( viewGray, pointBuf, Size(11,11),
@@ -274,7 +264,7 @@ bool CameraGeometricCalibration::findChessBoard(bool add) {
 
 }
 /*
- * used to check if enough time (in ms) have elapsed since the last
+ * Check if enough time (in ms) have elapsed since the last
  * recognized chessboard. This is useful, since this allows the program to
  * take multiple pictures of the chessboard in different orientations, instead of
  * taking all pictures in a row.
