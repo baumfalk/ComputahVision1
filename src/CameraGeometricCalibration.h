@@ -26,17 +26,19 @@ public:
 
 private:
 	void takePicture();
-	void showPicture(bool drawChessBoard = true);
 	void writeText(int x, int y, string msg);
 	bool findChessBoard(bool add = true);
 	bool enoughTimeElapsed(double waitingTime);
-	void calcChessBoardPositions3D(Size boardSize, float squareSize,
-			vector<Point3f>& corners);
+
+	void calcChessBoardPositions3D(Size boardSize, float squareSize, vector<Point3f>& corners);
 	void calculateReprojectionErrors();
 
 	void createAxes(vector<Point3f>& axes, int length);
 	void createCube(vector<Point3f>& axes, int length);
-	void createRotatingCube(vector<Point3f>& axes, int length);
+	void drawAxes(vector<Point2f>& imagePoints);
+	void drawCube(vector<Point2f>& imagePoints);
+	void drawChessBoardGrid(vector<Point2f>& imagePoints);
+	void drawPicture(bool drawChessBoard = true);
 
 	VideoCapture camera;
 	Mat webcamImage;
@@ -44,6 +46,7 @@ private:
 	Mat distCoeffs;
 
 	bool chessBoardFound;
+	bool done;
 	short numberOfSamplesNeeded;
 	short numberOfSamplesFound;
 	double timestamp;
