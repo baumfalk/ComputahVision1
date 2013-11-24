@@ -1,10 +1,11 @@
 /*
  * CameraGeometricCalibration.cpp
  *
- *  Created on: 12 nov. 2013
- *      Author: Jetze (3471055)
- *          en  Barend (3539784)
+ *       Author: Jetze (3471055)
+ *          and  Barend (3539784)
  *
+ *  Some code was inspired by http://docs.opencv.org/doc/tutorials/calib3d/camera_calibration/camera_calibration.html,
+ *  namely the code for enoughTimeElapsed, calculateReprojectionErrors and calcChessBoardPositions3D.
  */
 
 #include "CameraGeometricCalibration.h"
@@ -17,13 +18,13 @@ CameraGeometricCalibration::CameraGeometricCalibration(
 	this->numberOfSamplesNeeded = numberOfSamplesNeeded;
 	this->windowName = windowName;
 	numberOfSamplesFound = 0;
-	boardSize.width = 9; // TODO: make this dynamic.
+	boardSize.width = 9;
 	boardSize.height = 6;
 	squareSize = 5;
 	timestamp = clock();
 	namedWindow(windowName, CV_WINDOW_AUTOSIZE);
 
-	camera.open(0);
+	camera.open(-1);
 	if (!camera.isOpened()) {
 		cerr << "ERROR: Could not access the camera or video!" << endl;
 		exit(1);
@@ -87,52 +88,66 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 		takePicture();
 
 		Mat img;
-		undistort(webcamImage,img,cameraMatrix,distCoeffs);
+		undistort(webcamImage, img, cameraMatrix, distCoeffs);
 		webcamImage = img;
 		chessBoardFound = findChessBoard(false);
 		if (chessBoardFound) {
 			Mat rvec;
-			Mat rmat;
 			Mat tvec;
-			Mat extrinsic;
-            Mat rotatedAxes;
-                    
-            
+			Mat rotatedAxes;
+
 			solvePnP(chessBoardPoints3D[0], pointBuf, cameraMatrix, distCoeffs,
 					rvec, tvec, false, CV_EPNP);
-			Rodrigues(rvec, rmat);
-			hconcat(rmat, tvec, extrinsic);
+
 
 			vector<Point2f> imagePoints;
 
-			projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec,
-							cameraMatrix, distCoeffs, imagePoints);
+			projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec, cameraMatrix,
+					distCoeffs, imagePoints);
 
-			for(int i =0; i < imagePoints.size()-1; i++){
-				line(webcamImage,imagePoints[i],imagePoints[i+1],Scalar(128,0,128));
+			for (int i = 0; i < imagePoints.size() - 1; i++) {
+				line(webcamImage, imagePoints[i], imagePoints[i + 1],
+						Scalar(128, 0, 128));
 			}
 			vector<Point3f> axes;
-			createAxes(axes,20);
+			createAxes(axes, 20);
 
-			projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
-			line(webcamImage,imagePoints[0],imagePoints[1],Scalar(229,0,255),2);
-			line(webcamImage,imagePoints[0],imagePoints[2],Scalar(0,255,221),2);
-			line(webcamImage,imagePoints[0],imagePoints[3],Scalar(0,51,255),2);
+			projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs,
+					imagePoints);
+			line(webcamImage, imagePoints[0], imagePoints[1],
+					Scalar(229, 0, 255), 2);
+			line(webcamImage, imagePoints[0], imagePoints[2],
+					Scalar(0, 255, 221), 2);
+			line(webcamImage, imagePoints[0], imagePoints[3],
+					Scalar(0, 51, 255), 2);
 
 			createCube(axes, 10);
-            projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
-            line(webcamImage,imagePoints[0],imagePoints[1],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[0],imagePoints[2],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[0],imagePoints[3],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[3],imagePoints[5],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[3],imagePoints[6],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[2],imagePoints[4],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[2],imagePoints[5],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[1],imagePoints[4],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[1],imagePoints[6],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[7],imagePoints[5],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[7],imagePoints[6],Scalar(255,0,0),2);
-            line(webcamImage,imagePoints[7],imagePoints[4],Scalar(255,0,0),2);
+			projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs,
+					imagePoints);
+			line(webcamImage, imagePoints[0], imagePoints[1], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[0], imagePoints[2], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[0], imagePoints[3], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[3], imagePoints[5], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[3], imagePoints[6], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[2], imagePoints[4], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[2], imagePoints[5], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[1], imagePoints[4], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[1], imagePoints[6], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[7], imagePoints[5], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[7], imagePoints[6], Scalar(255, 0, 0),
+					2);
+			line(webcamImage, imagePoints[7], imagePoints[4], Scalar(255, 0, 0),
+					2);
 
 		}
 		showPicture(false);
@@ -143,21 +158,19 @@ void CameraGeometricCalibration::drawAxesAndCube() {
  * Initialize the coordinates needed to draw the X, Y and Z axes.
  *
  */
-void CameraGeometricCalibration::createAxes(vector<Point3f>& axes, int length){
+void CameraGeometricCalibration::createAxes(vector<Point3f>& axes, int length) {
 	axes.clear();
 	axes.push_back(Point3f(0, 0, 0));
 	axes.push_back(Point3f(length, 0, 0));
 	axes.push_back(Point3f(0, length, 0));
 	axes.push_back(Point3f(0, 0, -length));
-
-
 }
 
 /*
  * Initialize the coordinates needed to draw a cube along the axes.
  *
  */
-void CameraGeometricCalibration::createCube(vector<Point3f>& axes, int length){
+void CameraGeometricCalibration::createCube(vector<Point3f>& axes, int length) {
 	axes.clear();
 	axes.push_back(Point3f(0, 0, 0));
 
@@ -189,10 +202,12 @@ void CameraGeometricCalibration::calculateReprojectionErrors() {
 		totalPoints += n;
 	}
 
-	cout << "reprojection error:" << std::sqrt(totalErr/totalPoints) << endl;
+	cout << "reprojection error:" << std::sqrt(totalErr / totalPoints) << endl;
 }
 
-//TODO: write comments
+/*
+ *  Calculate the 3D coordinates for the chessboard (z-axis is 0).
+ */
 void CameraGeometricCalibration::calcChessBoardPositions3D(Size boardSize,
 		float squareSize, vector<Point3f>& corners) {
 	corners.clear();
@@ -202,9 +217,6 @@ void CameraGeometricCalibration::calcChessBoardPositions3D(Size boardSize,
 					Point3f(float(j * squareSize), float(i * squareSize), 0));
 }
 
-/*
- * Draw the axes of the chessboard on the origin as well as a cube.
- */
 /*
  * used to take a picture from the webcam. We rotate it around the x-axis so
  * that the window functions like a mirror. This makes the calibration easier,
@@ -255,8 +267,8 @@ bool CameraGeometricCalibration::findChessBoard(bool add) {
 		//Enhance the corners
 		Mat viewGray;
 		cvtColor(webcamImage, viewGray, CV_BGR2GRAY);
-		cornerSubPix( viewGray, pointBuf, Size(11,11),
-		Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
+		cornerSubPix(viewGray, pointBuf, Size(11, 11), Size(-1, -1),
+				TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
 
 		chessBoardPointList.push_back(pointBuf);
 	}
@@ -270,5 +282,5 @@ bool CameraGeometricCalibration::findChessBoard(bool add) {
  * taking all pictures in a row.
  */
 bool CameraGeometricCalibration::enoughTimeElapsed(double waitingTime) {
-	return (clock() - timestamp > waitingTime * 1e-3 * CLOCKS_PER_SEC );
+	return (clock() - timestamp > waitingTime * 1e-3 * CLOCKS_PER_SEC);
 }
