@@ -18,8 +18,7 @@ using namespace std;
 
 class CameraGeometricCalibration {
 public:
-	CameraGeometricCalibration(short numberOfSamplesNeeded = 40,
-			string windowName = "ComputahVision1");
+	CameraGeometricCalibration(short numberOfSamplesNeeded = 40, short delayBetweenPictures = 100);
 	void takeSamples();
 	void calibrate();
 	void drawAxesAndCube();
@@ -49,6 +48,7 @@ private:
 	bool done;
 	short numberOfSamplesNeeded;
 	short numberOfSamplesFound;
+	short delayBetweenPictures;
 	double timestamp;
 	float squareSize;
 	string windowName;

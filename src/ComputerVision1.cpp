@@ -13,7 +13,7 @@
  */
 int main(int argc, const char** argv) {
 
-	CameraGeometricCalibration cameraCalibrator;
+	CameraGeometricCalibration cameraCalibrator(50,300);
 	cameraCalibrator.takeSamples();
 	cameraCalibrator.calibrate();
 	cameraCalibrator.drawAxesAndCube();

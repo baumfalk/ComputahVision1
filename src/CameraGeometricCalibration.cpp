@@ -14,9 +14,10 @@
  * Initializes the class. Also create a window and shows a webcam picture in it.
  */
 CameraGeometricCalibration::CameraGeometricCalibration(
-		short numberOfSamplesNeeded, string windowName) {
+		short numberOfSamplesNeeded, short delayBetweenPictures) {
 	this->numberOfSamplesNeeded = numberOfSamplesNeeded;
-	this->windowName = windowName;
+	this->delayBetweenPictures = delayBetweenPictures;
+	windowName = "ComputahVision1";
 	numberOfSamplesFound = 0;
 	done = false;
 	boardSize.width = 9;
@@ -50,7 +51,7 @@ void CameraGeometricCalibration::takeSamples() {
 				numberOfSamplesNeeded);
 		writeText(10, 20, msg);
 
-		if (enoughTimeElapsed(100)) {
+		if (enoughTimeElapsed(delayBetweenPictures)) {
 			chessBoardFound = findChessBoard();
 			if (chessBoardFound) {
 				numberOfSamplesFound++;
@@ -95,7 +96,9 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 		if(key == 27 || key == 'q')
 			done = true;
 		takePicture();
-
+		Mat img;
+		undistort(webcamImage,img,cameraMatrix,distCoeffs);
+		webcamImage = img;
 		chessBoardFound = findChessBoard(false);
 		if (chessBoardFound) {
 			Mat rvec;
@@ -106,7 +109,6 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 			vector<Point2f> imagePoints;
 			projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec, cameraMatrix,	distCoeffs, imagePoints);
 			drawChessBoardGrid(imagePoints);
-
 
 			// draw the axes
 			vector<Point3f> axes;
