@@ -17,7 +17,7 @@ CameraGeometricCalibration::CameraGeometricCalibration(
 		short numberOfSamplesNeeded, short delayBetweenPictures) {
 	this->numberOfSamplesNeeded = numberOfSamplesNeeded;
 	this->delayBetweenPictures = delayBetweenPictures;
-	windowName = "ComputahVision1";
+	windowName = "ComputerVision";
 	numberOfSamplesFound = 0;
 	done = false;
 	boardSize.width = 9;

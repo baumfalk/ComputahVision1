@@ -13,7 +13,17 @@
  */
 int main(int argc, const char** argv) {
 
-	CameraGeometricCalibration cameraCalibrator(50,300);
+    int numberOfSamples = 50, timeBetweenSamples = 150;
+    if(argc >= 3)
+    {
+        numberOfSamples = atoi(argv[1]);
+        timeBetweenSamples = atoi(argv[2]);
+        if(numberOfSamples == 0 || timeBetweenSamples == 0)
+            cout << "Incorrect input: you need to give a number larger than 0";
+    }
+    else
+        cout << "usage: ComputerVision [numberOfSamples=50, timeBetweenSamples=150]" << endl;
+	CameraGeometricCalibration cameraCalibrator(numberOfSamples,timeBetweenSamples);
 	cameraCalibrator.takeSamples();
 	cameraCalibrator.calibrate();
 	cameraCalibrator.drawAxesAndCube();
