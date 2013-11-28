@@ -13,7 +13,7 @@
  */
 int main(int argc, const char** argv) {
 
-    int numberOfSamples = 50, timeBetweenSamples = 150;
+    int numberOfSamples = 15, timeBetweenSamples = 150;
     if(argc >= 3)
     {
         numberOfSamples = atoi(argv[1]);

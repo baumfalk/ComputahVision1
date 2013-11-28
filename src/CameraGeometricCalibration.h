@@ -33,8 +33,11 @@ private:
 	void calculateReprojectionErrors();
 
 	void createAxes(vector<Point3f>& axes, int length);
+    void createAxes2(Mat_<double>& axes, int length);
+    void createAxes3(Mat_<double> w[4], int length);
 	void createCube(vector<Point3f>& axes, int length);
 	void drawAxes(vector<Point2f>& imagePoints);
+    void drawAxes2(Point axes2D[4]);
 	void drawCube(vector<Point2f>& imagePoints);
 	void drawChessBoardGrid(vector<Point2f>& imagePoints);
 	void drawPicture(bool drawChessBoard = true);

@@ -105,21 +105,64 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 			Mat tvec;
 
 			solvePnP(chessBoardPoints3D[0], pointBuf, cameraMatrix, distCoeffs,	rvec, tvec, false, CV_EPNP);
+            
+            
+            
+            
+            Mat rmat;
+            Rodrigues(rvec, rmat);
+            Mat_<double> extrinsic = Mat(3,4,CV_64F);
+            hconcat(rmat, tvec, extrinsic);
+            //Mat submatrix = extrinsic.colRange(0, 3).rowRange(0, 3);
+            //rmat.copyTo(submatrix);
+            //submatrix = extrinsic.colRange(3, 4).rowRange(0, 3);
+            //tvec.copyTo(submatrix);
+            
+            
+            
+            Mat_<double> axes = Mat(3,4,CV_64F);
+            //vector<Point3f> axes;
+            Mat_<double> w[4];
+            createAxes3(w, 20);
+         
+            
+            
+            Mat_<double> c[4];
+            for( int i =0; i < 4; i++)
+            {
+                c[i] = (extrinsic * w[i]);
+            }
+            
+            Mat_<double> imageCoordinates[4];
+            for (int i = 0; i<4; i++) {
+                imageCoordinates[i] = cameraMatrix * c[i];
+                imageCoordinates[i] = imageCoordinates[i] /imageCoordinates[i].at<double>(2,0);
+            }
+            
+            Point axes2D[4];
+            for (int i =0; i < 4; i++) {
+                axes2D[i] = Point((int)imageCoordinates[i].at<double>(0,0),(int)imageCoordinates[i].at<double>(1,0));
+            }
+            
+            
+            
+            drawAxes2(axes2D);
+            
 			// draw our own chessboard grid
-			vector<Point2f> imagePoints;
-			projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec, cameraMatrix,	distCoeffs, imagePoints);
-			drawChessBoardGrid(imagePoints);
+			//vector<Point2f> imagePoints;
+			//projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec, cameraMatrix,	distCoeffs, imagePoints);
+			//drawChessBoardGrid(imagePoints);
 
 			// draw the axes
-			vector<Point3f> axes;
-			createAxes(axes, 20);
-			projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
-			drawAxes(imagePoints);
+			//vector<Point3f> axes;
+			//createAxes(axes, 20);
+			//projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
+			//drawAxes(imagePoints);
 
 			// draw the cube
-			createCube(axes, 10);
-			projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
-			drawCube(imagePoints);
+			//createCube(axes, 10);
+			//projectPoints(Mat(axes), rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
+			//drawCube(imagePoints);
 
 		}
 		drawPicture(false);
@@ -142,11 +185,26 @@ void CameraGeometricCalibration::drawChessBoardGrid(vector<Point2f>& imagePoints
  *
  */
 void CameraGeometricCalibration::createAxes(vector<Point3f>& axes, int length) {
-	axes.clear();
 	axes.push_back(Point3f(0, 0, 0));
 	axes.push_back(Point3f(length, 0, 0));
 	axes.push_back(Point3f(0, length, 0));
 	axes.push_back(Point3f(0, 0, -length));
+    
+}
+
+void CameraGeometricCalibration::createAxes2(Mat_<double>& axes, int length) {
+     axes = (Mat_<double>(4, 3,CV_64F) <<
+     0, 0, 0,
+     length, 0, 0,
+     0, length, 0,
+     0, 0, -length);
+}
+
+void CameraGeometricCalibration::createAxes3(Mat_<double> w[4], int length) {
+    w[0] = (Mat_<double>(4,1) << 0,0,0,1);
+    w[1] = (Mat_<double>(4,1) << length,0,0,1);
+    w[2] = (Mat_<double>(4,1) << 0,length,0,1);
+    w[3] = (Mat_<double>(4,1) << 0,0,-length,1);
 }
 
 /*
@@ -157,6 +215,14 @@ void CameraGeometricCalibration::drawAxes(vector<Point2f>& imagePoints)
 	line(webcamImage, imagePoints[0], imagePoints[1], Scalar(229, 0, 255), 2);
 	line(webcamImage, imagePoints[0], imagePoints[2], Scalar(0, 255, 221), 2);
 	line(webcamImage, imagePoints[0], imagePoints[3], Scalar(0, 51, 255), 2);
+}
+
+
+void CameraGeometricCalibration::drawAxes2(Point axes2D[4])
+{
+	line(webcamImage, axes2D[0], axes2D[1], Scalar(229, 0, 255), 2);
+	line(webcamImage, axes2D[0], axes2D[2], Scalar(0, 255, 221), 2);
+	line(webcamImage, axes2D[0], axes2D[3], Scalar(0, 51, 255), 2);
 }
 
 /*
@@ -216,6 +282,7 @@ void CameraGeometricCalibration::calculateReprojectionErrors() {
 
 	cout << "reprojection error:" << std::sqrt(totalErr / totalPoints) << endl;
 }
+
 
 /*
  *  Calculate the 3D coordinates for the chessboard (z-axis is 0).
