@@ -136,6 +136,9 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 	}
 }
 
+/*
+ * Saves a short movie shot by the webcam to the disk.
+ */
 void CameraGeometricCalibration::saveMovie() {
 	char filename [250];
 	double stamp = clock();
