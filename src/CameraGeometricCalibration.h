@@ -12,6 +12,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 #include <ctime>
+#include <cstdio>
 
 using namespace cv;
 using namespace std;
@@ -38,6 +39,7 @@ private:
 	void drawCube(vector<Point2f>& imagePoints);
 	void drawChessBoardGrid(vector<Point2f>& imagePoints);
 	void drawPicture(bool drawChessBoard = true);
+	void saveMovie();
 
 	VideoCapture camera;
 	Mat webcamImage;
@@ -46,6 +48,7 @@ private:
 
 	bool chessBoardFound;
 	bool done;
+	bool recording;
 	short numberOfSamplesNeeded;
 	short numberOfSamplesFound;
 	short delayBetweenPictures;
@@ -59,4 +62,5 @@ private:
 	vector<Point2f> pointBuf;
 	vector<vector<Point2f> > chessBoardPointList;
 	vector<vector<Point3f> > chessBoardPoints3D;
+	vector<Mat> images;
 };

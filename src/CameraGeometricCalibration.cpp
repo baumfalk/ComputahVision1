@@ -20,6 +20,7 @@ CameraGeometricCalibration::CameraGeometricCalibration(
 	windowName = "ComputerVision";
 	numberOfSamplesFound = 0;
 	done = false;
+	recording = false;
 	boardSize.width = 9;
 	boardSize.height = 6;
 	squareSize = 5;
@@ -79,7 +80,6 @@ void CameraGeometricCalibration::calibrate() {
 	double rms = calibrateCamera(chessBoardPoints3D, chessBoardPointList,
 			boardSize, cameraMatrix, distCoeffs, rvecs, tvecs,
 			CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5);
-
 	cout << "Camera matrix: " << cameraMatrix << endl;
 	cout << "error: " << rms << endl;
 	calculateReprojectionErrors();
@@ -95,10 +95,20 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 		char key = waitKey(33);
 		if(key == 27 || key == 'q')
 			done = true;
+		else if(key == 'r')
+		{
+			if(recording) {
+				saveMovie();
+				images.clear();
+			}
+			recording = !recording;
+		}
 		takePicture();
 		Mat img;
 		undistort(webcamImage,img,cameraMatrix,distCoeffs);
 		webcamImage = img;
+		if(recording)
+			writeText(10,20, "RECORDING");
 		chessBoardFound = findChessBoard(false);
 		if (chessBoardFound) {
 			Mat rvec;
@@ -123,6 +133,22 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 
 		}
 		drawPicture(false);
+	}
+}
+
+void CameraGeometricCalibration::saveMovie() {
+	char filename [250];
+	double stamp = clock();
+	sprintf(filename,"%f.AVI",stamp);
+	Size S = Size((int) camera.get(CV_CAP_PROP_FRAME_WIDTH),    // Acquire input size
+		                  (int) camera.get(CV_CAP_PROP_FRAME_HEIGHT));
+	VideoWriter outputVideo(filename, CV_FOURCC('M','J','P','G') , 30, S);
+
+	if(outputVideo.isOpened())
+	{
+		for(int i = 0; i < (int)images.size(); i++) {
+			outputVideo << images[i];
+		}
 	}
 }
 
@@ -238,6 +264,8 @@ void CameraGeometricCalibration::calcChessBoardPositions3D(Size boardSize,
 void CameraGeometricCalibration::takePicture() {
 
 	camera >> webcamImage;
+	if(recording)
+		images.push_back(webcamImage);
 	if (webcamImage.empty()) {
 		cerr << "ERROR: Couldn't grab a camera frame." << endl;
 		exit(1);

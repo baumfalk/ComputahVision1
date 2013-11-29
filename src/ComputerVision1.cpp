@@ -22,7 +22,7 @@ int main(int argc, const char** argv) {
             cout << "Incorrect input: you need to give a number larger than 0";
     }
     else
-        cout << "usage: ComputerVision [numberOfSamples=50, timeBetweenSamples=150]" << endl;
+        cout << "usage: ComputerVision1 [numberOfSamples=50, timeBetweenSamples=150]" << endl;
 	CameraGeometricCalibration cameraCalibrator(numberOfSamples,timeBetweenSamples);
 	cameraCalibrator.takeSamples();
 	cameraCalibrator.calibrate();
