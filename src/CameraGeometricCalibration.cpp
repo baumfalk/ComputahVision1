@@ -114,7 +114,7 @@ void CameraGeometricCalibration::drawAxesAndCube() {
 			Mat rvec;
 			Mat tvec;
 
-			solvePnP(chessBoardPoints3D[0], pointBuf, cameraMatrix, distCoeffs,	rvec, tvec, false, CV_EPNP);
+			solvePnP(chessBoardPoints3D[0], pointBuf, cameraMatrix, distCoeffs,	rvec, tvec, false);
 			// draw our own chessboard grid
 			vector<Point2f> imagePoints;
 			projectPoints(Mat(chessBoardPoints3D[0]), rvec, tvec, cameraMatrix,	distCoeffs, imagePoints);
